@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Validator;
 
+use Mail;
+use App\Mail\AccVerifyMail;
+
 class AuthController extends Controller
 {
     public function register(Request $request){
@@ -23,6 +26,21 @@ class AuthController extends Controller
         
         $registrationData['password'] = bcrypt($request->password);
         $user = User::create($registrationData);
+
+        try{
+            $hostlink = "https://tumbasyuk.xyz/homePage?confirm=";
+            $linkbuilder = $hostlink+$user->remember_token;
+            $detail = [
+                'activatelink' => $linkbuilder;
+            ];
+            Mail::to($user->email)->send(new AccVerifyMail($detail));
+        }catch(Exception $e){
+            return response([
+                'message' => 'Register Gagal - Error Pengiriman Pada Email',
+                'user' => $user
+            ], 200);
+        }
+
         return response([
             'message' => 'Register Success',
             'user' => $user
