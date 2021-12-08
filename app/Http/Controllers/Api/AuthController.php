@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Carbon\Carbon;
 use Validator;
 
 use Mail;
@@ -26,10 +27,11 @@ class AuthController extends Controller
         
         $registrationData['password'] = bcrypt($request->password);
         $user = User::create($registrationData);
+        $token = $user->createToken('Authentication Token')->accessToken;
 
         try{
-            $hostlink = "https://tumbasyuk.xyz/homePage?confirm=";
-            $linkbuilder = $hostlink+$user->remember_token;
+            $hostlink = "https://tumbasyuk.xyz/";
+            $linkbuilder = $hostlink+"?id="+$user->id+"&confirm="+$token;
             $detail = [
                 'activatelink' => $linkbuilder;
             ];
@@ -76,5 +78,27 @@ class AuthController extends Controller
         $token->revoke();
         $response = ["message"=>"You have successfully logout!!"];
         return response($response,200);
+    }
+
+    public function verify(Request $request){
+        $verifyData = $request->all();
+
+        $id = $verifyData->id;
+        $token = $verifyData->token;
+
+        $user = User::find($id);
+        $user->email_verified_at = Carbon::now();
+        if($user->save()) {
+            return response([
+                'message' => 'Verify User Success',
+                'data' => $user
+            ], 200);
+            $token->revoke();
+        }
+        
+        return response([
+            'message' => 'Verify User Failed',
+            'data' => null
+        ], 400);
     }
 }

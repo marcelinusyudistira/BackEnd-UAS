@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('register', 'Api\AuthController@register');
 Route::post('login', 'Api\AuthController@login');
+Route::post('verify', 'Api\AuthController@verify');
 
 Route::group(['middleware' => 'auth:api'], function (){
     Route::post('logout', 'Api\AuthController@logout');
